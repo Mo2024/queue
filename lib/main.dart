@@ -41,6 +41,7 @@ class _MyHomePageState extends State<MyHomePage> with RouteAware {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: ValueListenableBuilder(
           valueListenable: Hive.box('myBox').listenable(),
           builder: (context, box, _) {
@@ -56,14 +57,6 @@ class _MyHomePageState extends State<MyHomePage> with RouteAware {
                     color: Color.fromARGB(255, 1, 102, 92),
                   ),
                 ),
-                Text(
-                  "Total Waiting List: $count",
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 100, 100, 100),
-                  ),
-                ),
               ],
             );
           },
@@ -76,6 +69,19 @@ class _MyHomePageState extends State<MyHomePage> with RouteAware {
           final items = rawItems
               .map((item) => Customer.fromMap(Map<String, dynamic>.from(item)))
               .toList();
+
+          if (items.isEmpty) {
+            return Center(
+              child: Text(
+                'No customers in the waiting list',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[600],
+                ),
+              ),
+            );
+          }
           return ListView.builder(
             padding: const EdgeInsets.all(12),
             itemCount: items.length,
@@ -106,49 +112,11 @@ class _MyHomePageState extends State<MyHomePage> with RouteAware {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              const TextSpan(
-                                text: 'Number of people: ',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold, // bold
-                                ),
-                              ),
-                              TextSpan(
-                                text: '${customer.numberOfPeople}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.normal, // normal
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.check,
-                                color: Color(0xFF1B5E20),
-                              ),
-                              padding: EdgeInsets.zero,
-                              constraints:
-                                  const BoxConstraints(), // removes min size constraints
-                              onPressed: () {
-                                var box = Hive.box('myBox');
-                                var customers = box.get('customers') as List;
-                                customers.removeAt(index);
-                                box.put('customers', customers);
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
+                    MediaQuery(
+                      data: MediaQuery.of(
+                        context,
+                      ).copyWith(textScaler: TextScaler.linear(1.0)),
+                      child: numberOfPeople(context, index, customer),
                     ),
                     const SizedBox(height: 4),
                     Text('Mobile 1: ${customer.mobile1}'),
@@ -170,6 +138,50 @@ class _MyHomePageState extends State<MyHomePage> with RouteAware {
           Navigator.pushNamed(context, '/customer_form_page');
         },
       ),
+    );
+  }
+
+  Widget numberOfPeople(BuildContext build, int index, Customer customer) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(
+                text: 'Number of people: ',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold, // bold
+                ),
+              ),
+              TextSpan(
+                text: '${customer.numberOfPeople}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal, // normal
+                ),
+              ),
+            ],
+          ),
+        ),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.check, color: Color(0xFF1B5E20)),
+              padding: EdgeInsets.zero,
+              constraints:
+                  const BoxConstraints(), // removes min size constraints
+              onPressed: () {
+                var box = Hive.box('myBox');
+                var customers = box.get('customers') as List;
+                customers.removeAt(index);
+                box.put('customers', customers);
+              },
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
