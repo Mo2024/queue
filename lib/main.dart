@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:queue/customer.dart';
 import 'package:queue/customer_form/customer_form_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   await Hive.initFlutter();
@@ -37,6 +38,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with RouteAware {
+  Future<void> _makePhoneCall(String number) async {
+    final Uri launchUri = Uri.parse('tel:+973$number');
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch $number';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,7 +129,22 @@ class _MyHomePageState extends State<MyHomePage> with RouteAware {
                       child: numberOfPeople(context, index, customer),
                     ),
                     const SizedBox(height: 4),
-                    Text('Mobile 1: ${customer.mobile1}'),
+                    Row(
+                      children: [
+                        Text('Mobile 1: ${customer.mobile1}'),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.phone,
+                            color: Color.fromARGB(255, 61, 105, 64),
+                          ),
+                          // padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            _makePhoneCall(customer.mobile1);
+                          },
+                        ),
+                      ],
+                    ),
                     if ((customer.mobile2 ?? '').isNotEmpty)
                       Text('Mobile 2: ${customer.mobile2}'),
                   ],
@@ -134,7 +159,6 @@ class _MyHomePageState extends State<MyHomePage> with RouteAware {
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
         onPressed: () {
-          print('bnn');
           Navigator.pushNamed(context, '/customer_form_page');
         },
       ),
@@ -177,6 +201,7 @@ class _MyHomePageState extends State<MyHomePage> with RouteAware {
                 var customers = box.get('customers') as List;
                 customers.removeAt(index);
                 box.put('customers', customers);
+                // _makePhoneCall(customer.mobile1);
               },
             ),
           ],
